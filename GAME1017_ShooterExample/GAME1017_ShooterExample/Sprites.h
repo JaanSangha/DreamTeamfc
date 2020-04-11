@@ -14,6 +14,9 @@ public:
 	Sprite(const SDL_Rect s, const SDL_Rect d);
 	SDL_Rect* GetSrcP();
 	SDL_Rect* GetDstP();
+	int GetDstX();
+	void Render();
+	friend class Object;
 };
 
 class Player : public Sprite
@@ -68,4 +71,24 @@ class Platform : public Sprite
 {
 public:
 	Platform(const SDL_Rect d) :Sprite({ 0,0,0,0 }, d) {}
+};
+
+class Obstacle : public Sprite
+{
+public:
+	Obstacle(const SDL_Rect d) :Sprite({ 0,0,0,0 }, d) {}
+};
+
+class Object 
+{
+private:
+	
+	int	m_x;
+	Sprite* m_sprite;
+public:
+	Object(const SDL_Rect s, const SDL_Rect d, bool hasSprite = false);
+	~Object();
+	void Update();
+	void Render();
+	int GetX();
 };

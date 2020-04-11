@@ -5,7 +5,7 @@
 #define WIDTH 1024
 #define HEIGHT 768
 #define FPS 60
-#define BGSCROLL 2 // Could these scroll/speed values be handled in the class? Yes. Consider it!
+#define BGSCROLL 4
 #define PSPEED 6
 using namespace std;
 
@@ -30,7 +30,8 @@ bool Engine::Init(const char* title, int xpos, int ypos, int width, int height, 
 				{
 					m_pPlayerText = IMG_LoadTexture(m_pRenderer, "IMG/Player.png");
 					m_pBGText = IMG_LoadTexture(m_pRenderer, "Img/Backgrounds.png");
-				//	m_pMGText = IMG_Load
+					m_pObsText = IMG_LoadTexture(m_pRenderer, "IMG/Obstacles.png");
+				
 				//m_pSprText = IMG_LoadTexture(m_pRenderer, "Img/sprites.png");
 			
 				if (Mix_Init(MIX_INIT_MP3) != 0) // Mixer init success.
@@ -59,12 +60,21 @@ bool Engine::Init(const char* title, int xpos, int ypos, int width, int height, 
 	m_iKeystates = SDL_GetKeyboardState(nullptr);
 	m_pFSM = new FSM();
 	m_pFSM->ChangeState(new TitleState());
+	srand((unsigned)time(NULL)); // Seed random number sequence.
+	m_vec.reserve(8);
+	// Create the vector now.
+	for (int i = 0; i < 9; i++)
+	{
+		Object* temp = new Object({ 128,128,128,128 }, { 128 * i, 384,128,128 }); // 9empty boxes
+		m_vec.push_back(temp);
+	}
 	/*bgArray[0] = { {0,0,1024,768}, {0, 0, 1024, 768} };
 	bgArray[1] = { {0,0,1024,768}, {1024, 0, 1024, 768} };*/
 	/*mgArray[0] = { {0,0,256,768}, {0, 0, 256, 768} };
 	mgArray[1] = { {0,0,256,768}, {256, 0, 256, 768} };*/
 	m_pPlayer = new Player({ 0,256,128,128 }, { 1024 / 2 - 64, 300, 128, 128 });
 	m_pPlatforms[0] = new Platform({ -300,520,2024,100 });
+	//m_pObstacles[0] = new Object({ 0,0,125,445 }, { obDst.x, 0, 125, 445 });
 	//background 
 	bgDst = {0,0,1024, 768};
 	bgDstTwo = { bgDst.x+1024,0,1024, 768 };
@@ -87,7 +97,6 @@ bool Engine::Init(const char* title, int xpos, int ypos, int width, int height, 
 	Mix_VolumeMusic(16); // 0-MIX_MAX_VOLUME (128).
 	m_bRunning = true; // Everything is okay, start the engine.
 	//bool enemyInt = false;
-
 	std::cout << "Success!" << endl;
 	return true;
 }
@@ -159,7 +168,7 @@ bool Engine::KeyDown(SDL_Scancode c)
 void Engine::CheckCollision()
 {
 	for (int i = 0; i < 1; i++)
-	{
+	{	//this checks the player is on the ground
 		if (SDL_HasIntersection(m_pPlayer->GetDstP(), m_pPlatforms[i]->GetDstP()))
 		{
 			if ((m_pPlayer->GetDstP()->y + m_pPlayer->GetDstP()->h) - m_pPlayer->GetVelY() <= m_pPlatforms[i]->GetDstP()->y)
@@ -170,9 +179,32 @@ void Engine::CheckCollision()
 				m_pPlayer->SetVelY(0.0); // Stop the player from moving vertically. We aren't modifying gravity.
 				m_pPlayer->SetY(m_pPlatforms[i]->GetDstP()->y - m_pPlayer->GetDstP()->h - 1);
 			}
-		
+
 			break;
 		}
+	/*	if (Object.x + Object.w)
+		{
+		}*/
+		//if (SDL_HasIntersection(m_pPlayer->GetDstP(), m_pObstacles[i]->GetDstP()))
+		//{
+		//	if (m_pPlayer->GetDstP()->y - m_pPlayer->GetVelY() >= m_pObstacles[i]->GetDstP()->y + m_pObstacles[i]->GetDstP()->h)
+		//	{ // Collision from bottom.
+		//		m_pPlayer->SetVelY(0.0); // Stop the player from moving vertically. We aren't modifying gravity.
+		//		//m_pPlayer->SetY(m_pPlatforms[i]->GetDstP()->y + m_pPlatforms[i]->GetDstP()->h + 1);
+		//	}
+		//	else if ((m_pPlayer->GetDstP()->x + m_pPlayer->GetDstP()->w) - m_pPlayer->GetVelX() <= m_pObstacles[i]->GetDstP()->x)
+		//	{ // Collision from left.
+		//		m_pPlayer->SetVelX(0.0); // Stop the player from moving horizontally.
+		//		//m_pPlayer->SetX(m_pPlatforms[i]->GetDstP()->x - m_pPlayer->GetDstP()->w - 1);
+		//	}
+		//	else if (m_pPlayer->GetDstP()->x - m_pPlayer->GetVelX() >= m_pObstacles[i]->GetDstP()->x + m_pObstacles[i]->GetDstP()->w)
+		//	{ // Collision from right.
+		//		m_pPlayer->SetVelX(0.0); // Stop the player from moving horizontally.
+		//		//m_pPlayer->SetX(m_pPlatforms[i]->GetDstP()->x + m_pPlatforms[i]->GetDstP()->w + 1);
+		//	}
+		//	break;
+		//}
+	
 	}
 	//// Player vs. Enemy.
 	//SDL_Rect p = { m_player->GetDstP()->x-100, m_player->GetDstP()->y, 100, 94 };
@@ -188,8 +220,6 @@ void Engine::CheckCollision()
 	//		break;
 	//	}
 	//}
-
-	//if (m_bENull) CleanVector<Enemy*>(m_vEnemies, m_bENull);
 }
 
 /* Update is SUPER way too long on purpose! Part of the Assignment 1, if you use
@@ -198,6 +228,7 @@ void Engine::CheckCollision()
    their own behaviour and this is a big hint for you. */
 void Engine::Update()
 {
+	randNum = rand() % 3;
 	m_pFSM->Update();
 
 	if (dynamic_cast<GameState*>(Engine::Instance().GetFSM().GetStates().back()))
@@ -251,6 +282,51 @@ void Engine::Update()
 			fgDstFive.x = mgDstFour.x + 256;
 			fgDstSix.x = mgDstFive.x + 256;
 		}
+		// Check for out of bounds.
+		if ((m_vec[0])->GetX() <= -128) // Fully off-screen.
+		{
+			// Clean the first element in the vector.
+			delete m_vec[0];
+			m_vec[0] = nullptr;
+			m_vec.erase(m_vec.begin()); // Pop the front element.
+
+		// Create a new box at the end.
+			Object* temp;
+			// you are going to have to implement random obstacles
+			if (m_spawnCtr++ == 0)
+			{
+				//randNum = rand() % 3;
+				//random choice of obstacle in here.
+				//get random number
+				if (randNum == 0)
+				{
+					//floor spikes
+					temp = new Object({ 128,62,128,64 }, { 1024, 450,128,62 }, true); //not empty
+				}
+				else if (randNum == 1)
+				{
+					//circular saw
+					temp = new Object({ 128,128,128,128 }, { 1024, 448,128,128 }, true); //not empty
+				}
+				else
+				{
+					//spike wall..
+					temp = new Object({ 0,0,125,445 }, { 1024, 0,128,445 }, true); //not empty
+				}
+			}
+			else
+				temp = new Object({ 128,128,128,128 }, { 1024, 384,128,128 }); // empty
+
+			m_vec.push_back(temp);
+			if (m_spawnCtr == 3)
+				m_spawnCtr = 0;
+		}
+		// Scroll the objects.
+		for (int col = 0; col < 9; col++)
+		{
+			m_vec[col]->Update();
+		}
+
 		//for (int i = 0; i < 2; i++)
 		//{
 		//	bgDst.x - BGSCROLL;
@@ -301,27 +377,6 @@ void Engine::Update()
 		m_pPlayer->Update();
 		m_pPlayer->SetAccelY(0.0); // After jump, reset vertical acceleration.
 
-
-		// Enemy animation/movement.
-		//for (int i = 0; i < (int)m_vEnemies.size(); i++)
-		//{
-		//	m_vEnemies[i]->Update(); // Oh, again! We're telling the enemies to update themselves. Good good!
-		//	if (m_vEnemies[i]->GetDstP()->x < -56)
-		//	{
-		//		delete m_vEnemies[i];
-		//		m_vEnemies[i] = nullptr;
-		//		m_bENull = true;
-		//	}
-		//}
-		//if (m_bENull) CleanVector<Enemy*>(m_vEnemies, m_bENull); // Better to have a logic check (if) than a function call all the time!
-		//// Update enemy spawns.
-		//if (m_iESpawn++ == m_iESpawnMax)
-		//{
-		//	m_vEnemies.push_back(new Enemy({ 0,100,40,56 }, { WIDTH,56 + rand() % (HEIGHT - 114),40,56 },
-		//		30 + rand() % 91)); // Randomizing enemy bullet spawn to every 30-120 frames.
-		//	m_iESpawn = 0;
-		//}
-
 		CheckCollision();
 
 	}
@@ -351,25 +406,25 @@ void Engine::Render()
 			SDL_RenderCopy(m_pRenderer, m_pBGText, &mgSrc, &mgDstFour);
 			SDL_RenderCopy(m_pRenderer, m_pBGText, &mgSrc, &mgDstFive);
 			SDL_RenderCopy(m_pRenderer, m_pBGText, &mgSrc, &mgDstSix);
+			// Render obstacles.
+			for (int col = 0; col < 9; col++)
+			{
+				m_vec[col]->Render();
+			}
 			SDL_RenderCopy(m_pRenderer, m_pBGText, &fgSrc, &fgDst);
 			SDL_RenderCopy(m_pRenderer, m_pBGText, &fgSrc, &fgDstTwo);
 			SDL_RenderCopy(m_pRenderer, m_pBGText, &fgSrc, &fgDstThree);
 			SDL_RenderCopy(m_pRenderer, m_pBGText, &fgSrc, &fgDstFour);
 			SDL_RenderCopy(m_pRenderer, m_pBGText, &fgSrc, &fgDstFive);
+			//obstacle
+			SDL_RenderCopy(m_pRenderer, m_pOBText, &obSrc, &obDst);
 		
 			/*SDL_RenderCopy(m_pRenderer, m_pBGText, mgArray[i].GetSrcP(), mgArray[i].GetDstP());*/
 		//}
+			
 		// render the player sprite
 		SDL_RenderCopy(m_pRenderer, m_pPlayerText, m_pPlayer->GetSrcP(), m_pPlayer->GetDstP());
 	
-		// Enemies.
-		//for (int i = 0; i < (int)m_vEnemies.size(); i++)
-		//{
-		//	SDL_RenderCopyEx(m_pRenderer, m_pSprText, m_vEnemies[i]->GetSrcP(), m_vEnemies[i]->GetDstP(), -90, &m_pivot, SDL_FLIP_NONE);
-		//	/*SDL_SetRenderDrawColor(m_pRenderer, 255, 0, 0, 128);
-		//	SDL_RenderFillRect(m_pRenderer, m_vEnemies[i]->GetDstP());*/
-		//}
-
 		SDL_RenderPresent(m_pRenderer);
 	}
 }
@@ -383,6 +438,11 @@ void Engine::Clean()
 	//delete m_player;
 	delete m_pPlayer;
 	//m_player = nullptr;
+	for (int col = 0; col < 9; col++)
+	{
+		delete m_vec[col]; // vector.erase() won't deallocate memory through pointer.
+		m_vec[col] = nullptr; // Optional again, but good practice.
+	}
 	SDL_DestroyTexture(m_pPlayerText);
 	SDL_DestroyRenderer(m_pRenderer);
 	SDL_DestroyWindow(m_pWindow);
@@ -420,6 +480,8 @@ Engine& Engine::Instance()
 }
 
 SDL_Renderer* Engine::GetRenderer() {return m_pRenderer;}
+SDL_Texture* Engine::GetTexture(){return m_pObsText;}
+
 FSM& Engine::GetFSM() { return *m_pFSM; }
 
 SDL_Point& Engine::GetMousePos() { return m_MousePos; }

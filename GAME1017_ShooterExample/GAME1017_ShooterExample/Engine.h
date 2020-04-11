@@ -28,6 +28,13 @@ private: // Private properties.
 
 	SDL_Texture* m_pBGText; // For the bg.
 	SDL_Texture* m_pMGText; // for the mid ground
+	SDL_Texture* m_pOBText; // for obstacle textures
+
+	//obj specific properties
+	
+	SDL_Texture* m_pObsText;
+	vector< Object*> m_vec; // What is this?
+	int m_spawnCtr;
 
 
 	//SDL_Texture* m_pSprText; // For the sprites.
@@ -38,6 +45,11 @@ private: // Private properties.
 	bool m_bSpaceOk;
 	Player* m_pPlayer;
 	Platform* m_pPlatforms[1];
+	Object* m_pObstacles[1];
+	int objX = 1024;
+	//obstacle test
+	SDL_Rect obDst, obSrc;
+	int randNum;
 
 	//SDL_Texture* m_pTitleBackground; //for titlescreen
 	SDL_Point m_MousePos;
@@ -71,6 +83,7 @@ public: // Public methods.
 	static Engine& Instance();
 	bool KeyDown(SDL_Scancode c);
 	SDL_Renderer* GetRenderer();
+	SDL_Texture* GetTexture();
 	void CheckCollision();
 	FSM& GetFSM();
 	SDL_Point& GetMousePos();

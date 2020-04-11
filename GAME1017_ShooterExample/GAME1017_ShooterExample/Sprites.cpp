@@ -2,11 +2,22 @@
 #include <iostream>
 #include "Sprites.h"
 #include "Engine.h"
+#define SCROLLSPD 4
 using namespace std;
 
 Sprite::Sprite(const SDL_Rect s, const SDL_Rect d) : m_rSrc(s), m_rDst(d) {}
 SDL_Rect* Sprite::GetSrcP() { return &m_rSrc; }
 SDL_Rect* Sprite::GetDstP() { return &m_rDst; }
+
+int Sprite::GetDstX()
+{
+	return m_rDst.x;
+}
+
+void Sprite::Render()
+{
+	SDL_RenderCopy(Engine::Instance().GetRenderer(), Engine::Instance().GetTexture(), &m_rSrc, &m_rDst);
+}
 
 void Player::SetAnimationState(state st, int y, int fmax, int smin, int smax)
 {
@@ -102,5 +113,49 @@ void Player::SetRolling()
 
 void Player::SetDeath()
 {
+}
+
+Object::Object(SDL_Rect s, SDL_Rect d, bool hasSprite) : m_x(d.x), m_sprite(nullptr)
+{
+	if (hasSprite)
+	{
+		m_sprite = new Sprite(s, d);
+	}
+}
+
+Object::~Object()
+{
+	if (m_sprite != nullptr)
+	{
+		delete m_sprite;
+		m_sprite = nullptr; // Optional.
+	}
+}
+
+void Object::Update()
+{
+	m_x -= SCROLLSPD;
+	if (m_sprite != nullptr)
+	{
+		m_sprite->m_rDst.x = m_x;
+	}
+}
+
+void Object::Render()
+{
+	if (m_sprite != nullptr)
+		m_sprite->Render();
+	// Comment the below code out if you don't want to see a box for an empty sprite.
+	else
+	{
+		/*SDL_SetRenderDrawColor(Engine::Instance().GetRenderer(), 255, 0, 255, 255);
+		SDL_Rect temp = { m_x,384, 128, 128 };
+		SDL_RenderDrawRect(Engine::Instance().GetRenderer(), &temp);*/
+	}
+}
+
+int Object::GetX()
+{
+	return m_x;
 }
 
