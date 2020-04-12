@@ -49,7 +49,9 @@ private: // Private properties.
 	int objX = 1024;
 	//obstacle test
 	SDL_Rect obDst, obSrc;
+	SDL_Rect ColBox;
 	int randNum;
+	int rollHeight;
 
 	//SDL_Texture* m_pTitleBackground; //for titlescreen
 	SDL_Point m_MousePos;

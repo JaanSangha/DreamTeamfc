@@ -5,8 +5,8 @@
 #define WIDTH 1024
 #define HEIGHT 768
 #define FPS 60
-#define BGSCROLL 4
-#define PSPEED 6
+#define BGSCROLL 2
+#define PSPEED 5
 using namespace std;
 
 Engine::Engine() :m_bRunning(false), m_bSpaceOk(true) { std::cout << "Engine class constructed!" << endl; }
@@ -74,6 +74,8 @@ bool Engine::Init(const char* title, int xpos, int ypos, int width, int height, 
 	mgArray[1] = { {0,0,256,768}, {256, 0, 256, 768} };*/
 	m_pPlayer = new Player({ 0,256,128,128 }, { 1024 / 2 - 64, 300, 128, 128 });
 	m_pPlatforms[0] = new Platform({ -300,520,2024,100 });
+	ColBox = { m_pPlayer->GetDstP()->x,m_pPlayer->GetDstP()->y,m_pPlayer->GetDstP()->w,m_pPlayer->GetDstP()->h };
+	rollHeight = m_pPlayer->GetDstP()->h;
 	//m_pObstacles[0] = new Object({ 0,0,125,445 }, { obDst.x, 0, 125, 445 });
 	//background 
 	bgDst = {0,0,1024, 768};
@@ -128,12 +130,16 @@ void Engine::HandleEvents()
 		case SDL_KEYDOWN: // Try SDL_KEYUP instead.
 			if (event.key.keysym.sym == SDLK_ESCAPE)
 				m_bRunning = false;
+			if (event.key.keysym.sym == SDLK_l)
+				Engine::Instance().GetFSM().ChangeState(new LoseState);
 			break;
 		case SDL_KEYUP:
 			if (event.key.keysym.sym == SDLK_SPACE)
 				m_bSpaceOk = true;
 			if (event.key.keysym.sym == SDLK_a || event.key.keysym.sym == SDLK_d)
 				m_pPlayer->SetAccelX(0.0);
+			if (event.key.keysym.sym == SDLK_s)
+				ColBox.y = ColBox.y - (ColBox.h / 2);;
 			break;
 		case SDL_MOUSEBUTTONDOWN:
 			if (event.button.button >= 1 && event.button.button <3)
@@ -182,44 +188,59 @@ void Engine::CheckCollision()
 
 			break;
 		}
-	/*	if (Object.x + Object.w)
-		{
-		}*/
-		//if (SDL_HasIntersection(m_pPlayer->GetDstP(), m_pObstacles[i]->GetDstP()))
-		//{
-		//	if (m_pPlayer->GetDstP()->y - m_pPlayer->GetVelY() >= m_pObstacles[i]->GetDstP()->y + m_pObstacles[i]->GetDstP()->h)
-		//	{ // Collision from bottom.
-		//		m_pPlayer->SetVelY(0.0); // Stop the player from moving vertically. We aren't modifying gravity.
-		//		//m_pPlayer->SetY(m_pPlatforms[i]->GetDstP()->y + m_pPlatforms[i]->GetDstP()->h + 1);
-		//	}
-		//	else if ((m_pPlayer->GetDstP()->x + m_pPlayer->GetDstP()->w) - m_pPlayer->GetVelX() <= m_pObstacles[i]->GetDstP()->x)
-		//	{ // Collision from left.
-		//		m_pPlayer->SetVelX(0.0); // Stop the player from moving horizontally.
-		//		//m_pPlayer->SetX(m_pPlatforms[i]->GetDstP()->x - m_pPlayer->GetDstP()->w - 1);
-		//	}
-		//	else if (m_pPlayer->GetDstP()->x - m_pPlayer->GetVelX() >= m_pObstacles[i]->GetDstP()->x + m_pObstacles[i]->GetDstP()->w)
-		//	{ // Collision from right.
-		//		m_pPlayer->SetVelX(0.0); // Stop the player from moving horizontally.
-		//		//m_pPlayer->SetX(m_pPlatforms[i]->GetDstP()->x + m_pPlatforms[i]->GetDstP()->w + 1);
-		//	}
-		//	break;
-		//}
-	
 	}
-	//// Player vs. Enemy.
-	//SDL_Rect p = { m_player->GetDstP()->x-100, m_player->GetDstP()->y, 100, 94 };
-	//for (int i = 0; i < (int)m_vEnemies.size(); i++)
-	//{
-	//	SDL_Rect e = { m_vEnemies[i]->GetDstP()->x, m_vEnemies[i]->GetDstP()->y-40, 56, 40 };
-	//	if (SDL_HasIntersection(&p, &e))
-	//	{
-	//		// Game over!
-	//		cout << "Player goes boom!" << endl;
-	//		Mix_PlayChannel(-1, m_vSounds[2], 0);
-	//		GetFSML().ChangeState(new LoseState());
-	//		break;
-	//	}
-	//}
+
+	for (int col = 0; col < 9; col++)
+	{
+
+		SDL_Rect* temp = m_vec[col]->GetDstP();
+
+			if (m_vec[col]->getSprite() == true && SDL_HasIntersection(&ColBox, temp))
+			{
+		
+					//Engine::Instance().GetFSM().ChangeState(new LoseState);
+					//cout << "colliding from left" << endl;
+				//m_pPlayer->SetVelX(0.0); // Stop the player from moving horizontally.
+				//cout << "colliding from left" << endl;
+
+					// Collision from left.
+					if ((ColBox.x + ColBox.w) - m_pPlayer->GetVelX() <= temp->x)
+					{ 
+						m_pPlayer->SetVelX(0.0); // Stop the player from moving horizontally.
+						m_pPlayer->SetAccelX(0.0);
+						m_pPlayer->SetX(temp->x - m_pPlayer->GetDstP()->w - 1);
+						cout << "colliding from left" << endl;
+					}
+					// Collision from right.
+					else if (ColBox.x - m_pPlayer->GetVelX() >= temp->x + temp->w)
+					{ 
+						m_pPlayer->SetVelX(0.0); // Stop the player from moving horizontally.
+						m_pPlayer->SetAccelX(0.0);
+						m_pPlayer->SetX(temp->x + temp->w - 1);
+						cout << "colliding from right" << endl;
+					}
+					// Collision from bottom.
+					else if (ColBox.y - m_pPlayer->GetVelY() >= temp->y + temp->h)
+					{ 
+						m_pPlayer->SetVelY(0.0); // Stop the player from moving vertically. We aren't modifying gravity.
+						m_pPlayer->SetAccelY(0.0);
+					//	m_pPlayer->SetX(temp->x + temp->w - 1);
+						cout << "colliding from bottom" << endl;
+						
+					}
+					// Collision from top.
+					//else if (ColBox.y - m_pPlayer->GetVelY() >= temp->y + temp->h)
+					//{ 
+					//	m_pPlayer->SetVelY(0.0); // Stop the player from moving vertically. We aren't modifying gravity.
+					//	m_pPlayer->SetAccelX(0.0);
+					//	m_pPlayer->SetX(temp->x + temp->w - 1);
+					//	cout << "colliding from bottom" << endl;
+
+					//}
+					
+				
+			}
+	}
 }
 
 /* Update is SUPER way too long on purpose! Part of the Assignment 1, if you use
@@ -230,10 +251,10 @@ void Engine::Update()
 {
 	randNum = rand() % 3;
 	m_pFSM->Update();
-
+	
 	if (dynamic_cast<GameState*>(Engine::Instance().GetFSM().GetStates().back()))
 	{
-
+		ColBox = { m_pPlayer->GetDstP()->x,m_pPlayer->GetDstP()->y,m_pPlayer->GetDstP()->w,m_pPlayer->GetDstP()->h };
 		//// Scroll the backgrounds. Check if they need to snap back.
 		if (bgDst.x != -1024)
 		{
@@ -308,7 +329,7 @@ void Engine::Update()
 					//circular saw
 					temp = new Object({ 128,128,128,128 }, { 1024, 448,128,128 }, true); //not empty
 				}
-				else
+				else if (randNum == 2)
 				{
 					//spike wall..
 					temp = new Object({ 0,0,125,445 }, { 1024, 0,128,445 }, true); //not empty
@@ -318,7 +339,7 @@ void Engine::Update()
 				temp = new Object({ 128,128,128,128 }, { 1024, 384,128,128 }); // empty
 
 			m_vec.push_back(temp);
-			if (m_spawnCtr == 3)
+			if (m_spawnCtr == 4)
 				m_spawnCtr = 0;
 		}
 		// Scroll the objects.
@@ -337,12 +358,17 @@ void Engine::Update()
 		//	bgArray[0].GetDstP()->x = 0;
 		//	bgArray[1].GetDstP()->x = 1024;
 		//}
+
 		// Player animation/movement.
 		switch (m_pPlayer->GetAnimState())
 		{
 		case running:
 			if (KeyDown(SDL_SCANCODE_S))
+			{
 				m_pPlayer->SetRolling();
+				rollHeight = rollHeight / 2;
+				ColBox.y = ColBox.y +(ColBox.h/2);
+			}
 			else if (KeyDown(SDL_SCANCODE_SPACE) && m_bSpaceOk /*&& m_pPlayer->IsGrounded()*/)
 			{
 				m_bSpaceOk = false; // This just prevents repeated jumps when holding spacebar.
@@ -353,7 +379,10 @@ void Engine::Update()
 			break;
 		case rolling:
 			if (!KeyDown(SDL_SCANCODE_S))
+			{
 				m_pPlayer->SetRunning();
+				ColBox.h = m_pPlayer->GetDstP()->h;
+			}
 			break;
 		}
 
@@ -395,6 +424,7 @@ void Engine::Render()
 	{
 		SDL_SetRenderDrawColor(m_pRenderer, 0, 0, 0, 255);
 		SDL_RenderClear(m_pRenderer); // Clear the screen with the draw color.
+	/*	SDL_RenderDrawRect(Engine::Instance().GetRenderer(), &ColBox);*/
 		// Render stuff. Background first.
 		//for (int i = 0; i < 2; i++)
 		//{

@@ -2,21 +2,24 @@
 #include <iostream>
 #include "Sprites.h"
 #include "Engine.h"
-#define SCROLLSPD 4
+#define SCROLLSPD 2
 using namespace std;
 
 Sprite::Sprite(const SDL_Rect s, const SDL_Rect d) : m_rSrc(s), m_rDst(d) {}
 SDL_Rect* Sprite::GetSrcP() { return &m_rSrc; }
 SDL_Rect* Sprite::GetDstP() { return &m_rDst; }
+SDL_Rect* Sprite::GetColBox() {return &collisionbox;}
 
-int Sprite::GetDstX()
-{
-	return m_rDst.x;
-}
+//int Sprite::GetDstX()
+//{
+//	return m_rDst.x;
+//}
 
 void Sprite::Render()
 {
 	SDL_RenderCopy(Engine::Instance().GetRenderer(), Engine::Instance().GetTexture(), &m_rSrc, &m_rDst);
+	//SDL_SetRenderDrawColor(Engine::Instance().GetRenderer(), 255, 0, 255, 255);
+	//SDL_RenderDrawRect(Engine::Instance().GetRenderer(), &collisionbox);
 }
 
 void Player::SetAnimationState(state st, int y, int fmax, int smin, int smax)
@@ -53,10 +56,12 @@ void Player::Update()
 	m_dVelX = (m_dVelX + m_dAccelX) * m_dDrag;
 	m_dVelX = min(max(m_dVelX, -(m_dMaxVelX)), (m_dMaxVelX));
 	m_rDst.x += (int)m_dVelX;
+	collisionbox.x += (int)m_dVelX;
 	// Now do Y axis.
 	m_dVelY += m_dAccelY + (m_dGrav / 5); // Adjust gravity to get slower jump.
 	m_dVelY = min(max(m_dVelY, -(m_dMaxVelY * 10)), (m_dMaxVelY));
 	m_rDst.y += (int)m_dVelY;
+	collisionbox.y += (int)m_dVelY;
 	//if we have platforms
 	//if (fabs(m_dVelY) > (m_dGrav / 4)) //character is falling
 	//	SetJumping();
@@ -92,8 +97,8 @@ double Player::GetVelX() { return m_dVelX; }
 double Player::GetVelY() { return m_dVelY; }
 void Player::SetVelX(double v) { m_dVelX = v; }
 void Player::SetVelY(double v) { m_dVelY = v; }
-void Player::SetX(int y) { m_rDst.x = y; }
-void Player::SetY(int y) { m_rDst.y = y; }
+void Player::SetX(int y) { m_rDst.x = y; collisionbox.x = y; }
+void Player::SetY(int y) { m_rDst.y = y; collisionbox.y = y; }
 const state Player::GetAnimState() { return m_state; }
 
 void Player::SetJumping()
@@ -115,7 +120,7 @@ void Player::SetDeath()
 {
 }
 
-Object::Object(SDL_Rect s, SDL_Rect d, bool hasSprite) : m_x(d.x), m_sprite(nullptr)
+Object::Object(SDL_Rect s, SDL_Rect d, bool hasSprite) : m_rSrc(s), m_rDst(d), m_x(d.x), m_sprite(nullptr)
 {
 	if (hasSprite)
 	{
@@ -128,29 +133,39 @@ Object::~Object()
 	if (m_sprite != nullptr)
 	{
 		delete m_sprite;
-		m_sprite = nullptr; // Optional.
+		m_sprite = nullptr; 
 	}
 }
+
 
 void Object::Update()
 {
 	m_x -= SCROLLSPD;
+	m_rDst.x -= SCROLLSPD;
 	if (m_sprite != nullptr)
 	{
 		m_sprite->m_rDst.x = m_x;
 	}
 }
 
+SDL_Rect* Object::GetSrcP() { return &m_rSrc; }
+
+SDL_Rect* Object::GetDstP() { return &m_rDst; }
+
+
 void Object::Render()
 {
 	if (m_sprite != nullptr)
+	{
 		m_sprite->Render();
+		hasSprite = true;
+	}
 	// Comment the below code out if you don't want to see a box for an empty sprite.
 	else
 	{
 		/*SDL_SetRenderDrawColor(Engine::Instance().GetRenderer(), 255, 0, 255, 255);
-		SDL_Rect temp = { m_x,384, 128, 128 };
-		SDL_RenderDrawRect(Engine::Instance().GetRenderer(), &temp);*/
+		SDL_Rect temp = { m_x,384, 128, 128 };*/
+		//SDL_RenderDrawRect(Engine::Instance().GetRenderer(), &collisionbox);
 	}
 }
 
@@ -158,4 +173,18 @@ int Object::GetX()
 {
 	return m_x;
 }
+
+bool Object::getSprite()
+{
+	if (hasSprite == true)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+
 

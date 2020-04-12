@@ -8,13 +8,13 @@ enum state { running, jumping, rolling, dying };
 class Sprite
 {
 protected:
-	SDL_Rect m_rSrc, m_rDst;
+	SDL_Rect m_rSrc, m_rDst, collisionbox;
 
 public:
 	Sprite(const SDL_Rect s, const SDL_Rect d);
 	SDL_Rect* GetSrcP();
 	SDL_Rect* GetDstP();
-	int GetDstX();
+	SDL_Rect* GetColBox();
 	void Render();
 	friend class Object;
 };
@@ -82,12 +82,17 @@ public:
 class Object 
 {
 private:
-	
 	int	m_x;
 	Sprite* m_sprite;
+	bool hasSprite = false;
+protected:
+	SDL_Rect m_rSrc, m_rDst;
 public:
 	Object(const SDL_Rect s, const SDL_Rect d, bool hasSprite = false);
 	~Object();
+	SDL_Rect* GetSrcP();
+	SDL_Rect* GetDstP();
+	bool getSprite();
 	void Update();
 	void Render();
 	int GetX();
