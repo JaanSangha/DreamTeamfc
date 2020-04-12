@@ -2,7 +2,7 @@
 #include <iostream>
 #include "Sprites.h"
 #include "Engine.h"
-#define SCROLLSPD 2
+#define SCROLLSPD 4
 using namespace std;
 
 Sprite::Sprite(const SDL_Rect s, const SDL_Rect d) : m_rSrc(s), m_rDst(d) {}
@@ -118,6 +118,10 @@ void Player::SetRolling()
 
 void Player::SetDeath()
 {
+	this->SetAnimationState(dying, m_iAnimY + 128, 4, 4, 8);
+	
+		Engine::Instance().GetFSM().ChangeState(new LoseState);
+	
 }
 
 Object::Object(SDL_Rect s, SDL_Rect d, bool hasSprite) : m_rSrc(s), m_rDst(d), m_x(d.x), m_sprite(nullptr)

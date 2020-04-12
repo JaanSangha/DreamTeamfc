@@ -1,6 +1,14 @@
 #pragma once
-#include "Button.h"
+#include <SDL.h>
+#include <SDL_image.h>
+#include <SDL_mixer.h>
+#include <SDL_ttf.h>
 #include <vector>
+#include "Sprites.h"
+#include "FSM.h" 
+#include "Button.h"
+#define GRAV 20.0
+#define JUMPFORCE 50.0
 using namespace std;
 
 class State // Abstract base class
@@ -31,9 +39,36 @@ public:
 
 class GameState : public State
 { 
+private:
+	SDL_Texture* m_pBGText; // For the bg.
+	SDL_Texture* m_pMGText; // for the mid ground
+	SDL_Texture* m_pOBText; // for obstacle textures
+
+	//obj specific properties
+	SDL_Texture* m_pObsText;
+	vector< Object*> m_vec; // What is this?
+	int m_spawnCtr;
+
+	// background rectangles
+	SDL_Rect bgDst, bgDstTwo, mgDst, mgDstTwo, mgDstThree, mgDstFour, mgDstFive,
+		mgDstSix, fgDst, fgDstTwo, fgDstThree, fgDstFour, fgDstFive, fgDstSix,
+		bgSrc, mgSrc, fgSrc;
+
+	//new from animation
+	SDL_Texture* m_pPlayerText;
+	bool m_bSpaceOk;
+	Player* m_pPlayer;
+	Platform* m_pPlatforms[1];
+	Object* m_pObstacles[1];
+
+	//obstacle test
+	SDL_Rect obDst, obSrc;
+	SDL_Rect ColBox;
+	int randNum;
 public:
 	GameState();
 	void Enter();
+	void CheckCollision();
 	void Update();
 	void Render();
 	void Exit();
