@@ -65,6 +65,9 @@ private:
 	SDL_Rect obDst, obSrc;
 	SDL_Rect ColBox;
 	int randNum;
+
+	//sounds
+	vector<Mix_Chunk*> m_vSounds;
 public:
 	GameState();
 	void Enter();

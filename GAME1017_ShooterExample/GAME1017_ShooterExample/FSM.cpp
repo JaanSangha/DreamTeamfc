@@ -4,7 +4,8 @@
 #include <vector>
 #include <functional>
 #include <ctime>
-#define BGSCROLL 4
+#define BGSCROLL 2
+#define MGSCROLL 4
 #define PSPEED 6
 
 using namespace std;
@@ -72,6 +73,11 @@ GameState::GameState()
 	m_pPlayerText = IMG_LoadTexture(Engine::Instance().GetRenderer(), "IMG/Player.png");
 	m_pBGText = IMG_LoadTexture(Engine::Instance().GetRenderer(), "Img/Backgrounds.png");
 	m_pObsText = IMG_LoadTexture(Engine::Instance().GetRenderer(), "IMG/Obstacles.png");
+	Mix_OpenAudio(22050, AUDIO_S16SYS, 2, 2048); // Good for most games.
+	Mix_AllocateChannels(16);
+	m_vSounds.reserve(2); // Optional but good practice.
+	m_vSounds.push_back(Mix_LoadWAV("Aud/jump.wav"));
+	m_vSounds.push_back(Mix_LoadWAV("Aud/death.wav"));
 
 	srand((unsigned)time(NULL)); // Seed random number sequence.
 	m_vec.reserve(8);
@@ -141,6 +147,7 @@ void GameState::CheckCollision()
 					// Collision from left.
 					if ((ColBox.x+ ColBox.w) - m_pPlayer->GetVelX() <= temp->x)
 					{ 
+						Mix_PlayChannel(-1, m_vSounds[1], 0);
 						m_pPlayer->SetVelX(0.0); // Stop the player from moving horizontally.
 						m_pPlayer->SetAccelX(0.0);
 						m_pPlayer->SetX(temp->x - ColBox.w - 1);
@@ -151,6 +158,7 @@ void GameState::CheckCollision()
 					// Collision from right.
 					else if (ColBox.x - m_pPlayer->GetVelX() >= temp->x +temp->w)
 					{ 
+						Mix_PlayChannel(-1, m_vSounds[1], 0);
 						m_pPlayer->SetVelX(0.0); // Stop the player from moving horizontally.
 						m_pPlayer->SetAccelX(0.0);
 						m_pPlayer->SetX(temp->x + temp->w + 1);
@@ -162,9 +170,9 @@ void GameState::CheckCollision()
 					// Collision from bottom.
 					else if (ColBox.y - m_pPlayer->GetVelY() >= temp->y + temp->h)
 					{ 
+						Mix_PlayChannel(-1, m_vSounds[1], 0);
 						m_pPlayer->SetVelY(0.0); // Stop the player from moving vertically. We aren't modifying gravity.
 						m_pPlayer->SetAccelY(0.0);
-					//	m_pPlayer->SetX(temp->x + temp->w - 1);
 						cout << "colliding from bottom" << endl;
 						Engine::Instance().GetFSM().PushState(new LoseState());
 						//m_pPlayer->SetDeath();
@@ -173,6 +181,7 @@ void GameState::CheckCollision()
 					// Collision from top.
 					else if ((ColBox.y + ColBox.h) - m_pPlayer->GetVelY() <= temp->y)
 					{ 
+						Mix_PlayChannel(-1, m_vSounds[1], 0);
 						m_pPlayer->SetGrounded(true);
 						if (m_pPlayer->GetAnimState() == jumping)
 							m_pPlayer->SetRunning();
@@ -181,9 +190,7 @@ void GameState::CheckCollision()
 						cout << "colliding from top" << endl;
 						Engine::Instance().GetFSM().PushState(new LoseState());
 
-					}
-					
-				
+					}				
 			}
 	}
 }
@@ -211,12 +218,12 @@ void GameState::Update()
 
 		if (mgDst.x != -256)
 		{
-			mgDst.x = mgDst.x - BGSCROLL;
-			mgDstTwo.x = mgDstTwo.x - BGSCROLL;
-			mgDstThree.x = mgDstThree.x - BGSCROLL;
-			mgDstFour.x = mgDstFour.x - BGSCROLL;
-			mgDstFive.x = mgDstFive.x - BGSCROLL;
-			mgDstSix.x = mgDstSix.x - BGSCROLL;
+			mgDst.x = mgDst.x - MGSCROLL;
+			mgDstTwo.x = mgDstTwo.x - MGSCROLL;
+			mgDstThree.x = mgDstThree.x - MGSCROLL;
+			mgDstFour.x = mgDstFour.x - MGSCROLL;
+			mgDstFive.x = mgDstFive.x - MGSCROLL;
+			mgDstSix.x = mgDstSix.x - MGSCROLL;
 		}
 		else if (mgDst.x == -256)
 		{
@@ -229,12 +236,12 @@ void GameState::Update()
 		}
 		if (fgDst.x != -256)
 		{
-			fgDst.x = mgDst.x - BGSCROLL;
-			fgDstTwo.x = mgDstTwo.x - BGSCROLL;
-			fgDstThree.x = mgDstThree.x - BGSCROLL;
-			fgDstFour.x = mgDstFour.x - BGSCROLL;
-			fgDstFive.x = mgDstFive.x - BGSCROLL;
-			fgDstSix.x = mgDstSix.x - BGSCROLL;
+			fgDst.x = mgDst.x - MGSCROLL;
+			fgDstTwo.x = mgDstTwo.x - MGSCROLL;
+			fgDstThree.x = mgDstThree.x - MGSCROLL;
+			fgDstFour.x = mgDstFour.x - MGSCROLL;
+			fgDstFive.x = mgDstFive.x - MGSCROLL;
+			fgDstSix.x = mgDstSix.x - MGSCROLL;
 		}
 		else if (fgDst.x == -256)
 		{
@@ -290,17 +297,6 @@ void GameState::Update()
 			m_vec[col]->Update();
 		}
 
-		//for (int i = 0; i < 2; i++)
-		//{
-		//	bgDst.x - BGSCROLL;
-		//	mgArray[i].GetDstP()->x -= BGSCROLL;
-		//}
-		//if (bgArray[1].GetDstP()->x <= 0)
-		//{
-		//	bgArray[0].GetDstP()->x = 0;
-		//	bgArray[1].GetDstP()->x = 1024;
-		//}
-
 		// Player animation/movement.
 		switch (m_pPlayer->GetAnimState())
 		{
@@ -315,6 +311,7 @@ void GameState::Update()
 				m_pPlayer->SetAccelY(-JUMPFORCE); // Sets the jump force.
 				m_pPlayer->SetGrounded(false);
 				m_pPlayer->SetJumping();
+				Mix_PlayChannel(-1, m_vSounds[0], 0);
 			}
 			break;
 		case rolling:
@@ -407,13 +404,6 @@ void GameState::Render()
 
 	SDL_RenderPresent(Engine::Instance().GetRenderer());
 
-
-
-	/*cout << "Rendering Game.." << endl;
-	SDL_SetRenderDrawColor(Engine::Instance().GetRenderer(), 0, 255, 0, 255);
-	SDL_RenderClear(Engine::Instance().GetRenderer());
-	if (dynamic_cast<GameState*>(Engine::Instance().GetFSM().GetStates().back()))
-		State::Render();*/
 }
 
 void GameState::Exit()
@@ -449,7 +439,7 @@ void TitleState::Render()
 {
 	cout << "Rendering Title.." << endl;
 	tSrc = tDst = { 0,0,1024,768 };
-	m_pTitleBackground = IMG_LoadTexture(Engine::Instance().GetRenderer(), "Img/TitleScreen.png");
+	m_pTitleBackground = IMG_LoadTexture(Engine::Instance().GetRenderer(), "Img/DesertTitle.png");
 	SDL_RenderCopy(Engine::Instance().GetRenderer(), m_pTitleBackground, &tSrc, &tDst); //make titlescreen appear
 	for (int i = 0; i < (int)m_vButtons.size(); i++)
 		m_vButtons[i]->Render();

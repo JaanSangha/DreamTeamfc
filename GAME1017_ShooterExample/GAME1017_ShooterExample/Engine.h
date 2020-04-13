@@ -26,8 +26,6 @@ private: // Private properties.
 	SDL_Window* m_pWindow; // This represents the SDL window.
 	SDL_Renderer* m_pRenderer; // This represents the buffer to draw to.
 
-	//SDL_Texture* m_pBGText; // For the bg.
-	//SDL_Texture* m_pMGText; // for the mid ground
 	SDL_Texture* m_pOBText; // for obstacle textures
 
 	//obj specific properties
@@ -36,24 +34,9 @@ private: // Private properties.
 	vector< Object*> m_vec; // What is this?
 	int m_spawnCtr;
 
-
-	//SDL_Texture* m_pSprText; // For the sprites.
-	//// background rectangles
-	//SDL_Rect bgDst,bgDstTwo,mgDst,mgDstTwo, mgDstThree, mgDstFour, mgDstFive, 
-	//	mgDstSix, fgDst, fgDstTwo, fgDstThree, fgDstFour, fgDstFive, fgDstSix, 
-	//	bgSrc, mgSrc, fgSrc;
 	//new from animation
 	SDL_Texture* m_pPlayerText;
 	bool m_bSpaceOk;
-	//Player* m_pPlayer;
-	//Platform* m_pPlatforms[1];
-	//Object* m_pObstacles[1];
-
-	////obstacle test
-	//SDL_Rect obDst, obSrc;
-	//SDL_Rect ColBox;
-	//int randNum;
-	//int rollHeight;
 
 	//SDL_Texture* m_pTitleBackground; //for titlescreen
 	SDL_Point m_MousePos;

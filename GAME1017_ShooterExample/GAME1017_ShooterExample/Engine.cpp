@@ -28,8 +28,6 @@ bool Engine::Init(const char* title, int xpos, int ypos, int width, int height, 
 			{
 				if (IMG_Init(IMG_INIT_PNG))
 				{
-					/*m_pPlayerText = IMG_LoadTexture(m_pRenderer, "IMG/Player.png");
-					m_pBGText = IMG_LoadTexture(m_pRenderer, "Img/Backgrounds.png");*/
 					m_pObsText = IMG_LoadTexture(m_pRenderer, "IMG/Obstacles.png");
 				
 				//m_pSprText = IMG_LoadTexture(m_pRenderer, "Img/sprites.png");
@@ -164,14 +162,6 @@ void Engine::Clean()
 	m_pFSM->Clean();
 	delete m_pFSM;
 	m_pFSM = nullptr; //optional
-	//delete m_player;
-	//delete m_pPlayer;
-	//m_player = nullptr;
-	//for (int col = 0; col < 9; col++)
-	//{
-	//	delete m_vec[col]; // vector.erase() won't deallocate memory through pointer.
-	//	m_vec[col] = nullptr; // Optional again, but good practice.
-	//}
 	SDL_DestroyTexture(m_pPlayerText);
 	SDL_DestroyRenderer(m_pRenderer);
 	SDL_DestroyWindow(m_pWindow);
